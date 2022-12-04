@@ -8,8 +8,6 @@ lazy val root = (project in file("."))
     idePackagePrefix := Some("com.htl.searchengine")
   )
 
-
-// https://mvnrepository.com/artifact/org.apache.lucene/lucene-core
 libraryDependencies += "org.apache.lucene" % "lucene-core" % "9.4.2"
 libraryDependencies += "org.apache.lucene" % "lucene-queryparser" % "9.4.2"
 libraryDependencies += "org.apache.lucene" % "lucene-analyzers-common" % "8.11.1"
