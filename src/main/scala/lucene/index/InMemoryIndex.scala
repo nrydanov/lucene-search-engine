@@ -5,7 +5,6 @@ import org.apache.lucene.analysis.Analyzer
 import org.apache.lucene.document.{Document, Field, SortedDocValuesField, StoredField, TextField}
 import org.apache.lucene.index.{DirectoryReader, IndexWriter, IndexWriterConfig}
 import org.apache.lucene.queryparser.classic.QueryParser
-import org.apache.lucene.search.highlight.{Highlighter, QueryScorer, SimpleHTMLFormatter, TokenSources}
 import org.apache.lucene.search.{IndexSearcher, Query, Sort}
 import org.apache.lucene.store.Directory
 import org.apache.lucene.util.BytesRef
@@ -25,26 +24,24 @@ class InMemoryIndex(var directory: Directory, var analyzer: Analyzer) {
     writer.close()
   }
 
-  def searchIndex(query: Query): Array[Document] = {
+  def searchIndex(query: Query, top: Int): Array[Document] = {
     val reader = DirectoryReader.open(directory)
     val searcher = new IndexSearcher(reader)
-    val docs = searcher.search(query, 10)
+    val docs = searcher.search(query, top)
 
-    docs.scoreDocs.map(scoreDoc => searcher.doc(scoreDoc.doc))
-
-
-  }
-
-  private def searchIndex(query: Query, sort: Sort): Array[Document] = {
-    val reader = DirectoryReader.open(directory)
-    val searcher = new IndexSearcher(reader)
-    val docs = searcher.search(query, 10, sort)
     docs.scoreDocs.map(scoreDoc => searcher.doc(scoreDoc.doc))
   }
 
-  def searchIndex(fieldName: String, queryString: String): Array[Document] = {
+  private def searchIndex(query: Query, top: Int, sort: Sort): Array[Document] = {
+    val reader = DirectoryReader.open(directory)
+    val searcher = new IndexSearcher(reader)
+    val docs = searcher.search(query, top, sort)
+    docs.scoreDocs.map(scoreDoc => searcher.doc(scoreDoc.doc))
+  }
+
+  def searchIndex(fieldName: String, queryString: String, top: Int): Array[Document] = {
     val query = new QueryParser(fieldName, analyzer).parse(queryString)
 
-    searchIndex(query)
+    searchIndex(query, top)
   }
 }

@@ -17,11 +17,11 @@ class Engine(path: Path) {
 
   private val index: InMemoryIndex = new InMemoryIndex(new MMapDirectory(path), new RussianAnalyzer())
 
-  def searchOneTerm(term: Term): Array[Document] = {
+  def searchOneTerm(term: Term, top: Int): Array[Document] = {
 
     val query = new TermQuery(term)
 
-    val documents = index.searchIndex(query)
+    val documents = index.searchIndex(query, top)
 
     documents
   }

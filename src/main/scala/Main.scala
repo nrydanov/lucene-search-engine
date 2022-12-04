@@ -16,9 +16,6 @@ object Main {
 
     for (doc <- scoreDocs) {
       val title = doc.get("title")
-      val
-
-      println(title)
     }
     print("Done")
   }
