@@ -10,6 +10,8 @@ lazy val root = (project in file("."))
 
 libraryDependencies += "org.apache.lucene" % "lucene-core" % "9.4.2"
 libraryDependencies += "org.apache.lucene" % "lucene-queryparser" % "9.4.2"
-libraryDependencies += "org.apache.lucene" % "lucene-analyzers-common" % "8.11.1"
+libraryDependencies += "org.apache.lucene" % "lucene-analyzers-common" % "8.11.2"
 libraryDependencies += "org.apache.lucene" % "lucene-highlighter" % "9.4.2"
+libraryDependencies += "org.apache.lucene" % "lucene-spellchecker" % "3.6.2"
 libraryDependencies += "com.typesafe.play" %% "play-json" % "2.9.3"
+
