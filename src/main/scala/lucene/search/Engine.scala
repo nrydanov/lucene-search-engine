@@ -40,6 +40,8 @@ class Engine(path: Path) {
     for (file <- files) {
       val doc = new JsonDocument(file.getAbsolutePath)
       index.indexDocument(doc.getTitle, doc.getBody, doc.getCategories)
+
+
     }
   }
 

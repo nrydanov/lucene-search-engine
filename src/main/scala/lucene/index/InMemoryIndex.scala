@@ -2,12 +2,9 @@ package com.htl.searchengine
 package lucene.index
 
 import org.apache.lucene.analysis.Analyzer
-<<<<<<< Updated upstream
 import org.apache.lucene.document.{Document, Field, SortedDocValuesField, StoredField, TextField}
-=======
 import org.apache.lucene.document._
 import org.apache.lucene.index.IndexWriterConfig.OpenMode
->>>>>>> Stashed changes
 import org.apache.lucene.index.{DirectoryReader, IndexWriter, IndexWriterConfig}
 import org.apache.lucene.queryparser.classic.QueryParser
 import org.apache.lucene.search.highlight.{Highlighter, QueryScorer, SimpleHTMLFormatter, SimpleSpanFragmenter}
@@ -15,7 +12,11 @@ import org.apache.lucene.search.{IndexSearcher, Query, Sort}
 import org.apache.lucene.store.Directory
 import org.apache.lucene.util.BytesRef
 
+
 class InMemoryIndex(var directory: Directory, var analyzer: Analyzer) {
+
+  private final val MAX_FRAGMENT_SIZE = 100
+
   def indexDocument(title: String, body:String, categories: Array[String]): Unit = {
     val config = new IndexWriterConfig(analyzer)
     val writer = new IndexWriter(directory, config)
@@ -47,7 +48,7 @@ class InMemoryIndex(var directory: Directory, var analyzer: Analyzer) {
 
     val highlighter = new Highlighter(new SimpleHTMLFormatter(), queryScorer)
 
-    highlighter.setTextFragmenter(new SimpleSpanFragmenter(queryScorer, 100))
+    highlighter.setTextFragmenter(new SimpleSpanFragmenter(queryScorer, this.MAX_FRAGMENT_SIZE))
     highlighter.setMaxDocCharsToAnalyze(Int.MaxValue)
 
     for (document <- result) {
