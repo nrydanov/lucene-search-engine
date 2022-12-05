@@ -2,15 +2,13 @@ package com.htl.searchengine
 package lucene.index
 
 import org.apache.lucene.analysis.Analyzer
-import org.apache.lucene.document.{Document, Field, SortedDocValuesField, StoredField, TextField}
-import org.apache.lucene.document._
+import org.apache.lucene.document.{Document, Field, TextField}
 import org.apache.lucene.index.IndexWriterConfig.OpenMode
 import org.apache.lucene.index.{DirectoryReader, IndexWriter, IndexWriterConfig}
 import org.apache.lucene.queryparser.classic.QueryParser
 import org.apache.lucene.search.highlight.{Highlighter, QueryScorer, SimpleHTMLFormatter, SimpleSpanFragmenter}
 import org.apache.lucene.search.{IndexSearcher, Query, Sort}
 import org.apache.lucene.store.Directory
-import org.apache.lucene.util.BytesRef
 
 
 class InMemoryIndex(var directory: Directory, var analyzer: Analyzer) {

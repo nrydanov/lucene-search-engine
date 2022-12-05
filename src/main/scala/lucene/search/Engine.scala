@@ -6,9 +6,8 @@ import util.JsonDocument
 
 import org.apache.lucene.analysis.ru.RussianAnalyzer
 import org.apache.lucene.document.Document
-import org.apache.lucene.index.{IndexWriterConfig, Term}
+import org.apache.lucene.index.Term
 import org.apache.lucene.search.TermQuery
-import org.apache.lucene.search.spell.{PlainTextDictionary, SpellChecker}
 import org.apache.lucene.store.MMapDirectory
 
 import java.io.File
