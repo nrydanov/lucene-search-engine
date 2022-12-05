@@ -2,7 +2,12 @@ package com.htl.searchengine
 package lucene.index
 
 import org.apache.lucene.analysis.Analyzer
+<<<<<<< Updated upstream
 import org.apache.lucene.document.{Document, Field, SortedDocValuesField, StoredField, TextField}
+=======
+import org.apache.lucene.document._
+import org.apache.lucene.index.IndexWriterConfig.OpenMode
+>>>>>>> Stashed changes
 import org.apache.lucene.index.{DirectoryReader, IndexWriter, IndexWriterConfig}
 import org.apache.lucene.queryparser.classic.QueryParser
 import org.apache.lucene.search.highlight.{Highlighter, QueryScorer, SimpleHTMLFormatter, SimpleSpanFragmenter}
@@ -16,12 +21,19 @@ class InMemoryIndex(var directory: Directory, var analyzer: Analyzer) {
     val writer = new IndexWriter(directory, config)
     val document = new Document()
 
-    document.add(new SortedDocValuesField("title", new BytesRef(title)))
-    document.add(new StoredField("title", title))
+    document.add(new TextField("title", title, Field.Store.YES))
     document.add(new TextField("body", body, Field.Store.YES))
     categories.foreach(cat => document.add(new TextField("categories", cat, Field.Store.YES)))
 
     writer.addDocument(document)
+    writer.close()
+  }
+
+  def clearIndex(): Unit = {
+
+    val config = new IndexWriterConfig(analyzer).setOpenMode(OpenMode.CREATE)
+    val writer = new IndexWriter(directory, config)
+
     writer.close()
   }
 
