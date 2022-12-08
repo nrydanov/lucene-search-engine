@@ -3,7 +3,6 @@ package com.htl.searchengine
 import lucene.search.Engine
 
 import org.apache.logging.log4j.scala.Logging
-import org.apache.lucene.index.Term
 
 import java.nio.file.Paths
 import scala.io.StdIn.readLine
@@ -22,7 +21,7 @@ object Application extends Logging {
       logger.info("Documents was added successfully")
     }
     catch {
-      case e: Exception => logger.error("Couldn't open folder")
+      case _: Exception => logger.error("Couldn't open folder")
     }
   }
 
@@ -30,13 +29,13 @@ object Application extends Logging {
     print("Enter field name: ")
     val field = readLine()
 
-    print("Enter text: ")
-    val text = readLine()
+    print("Enter query: ")
+    val queryString = readLine()
 
     print("Enter number of documents: ")
     val number = readLine().toInt
 
-    val _ = e.searchOneTerm(new Term(field, text), number)
+    e.searchQuery(field, queryString, number)
   }
 
   private def clearIndex(): Unit = {
@@ -50,7 +49,7 @@ object Application extends Logging {
     while (active) {
       println("Choose option:")
       println("1. Add documents from directory")
-      println("2. Make one-term search")
+      println("2. Make query search")
       println("3. Clear index")
 
       print("Option: ")

@@ -1,0 +1,3 @@
+[submodule "synonym_dictionary"]
+	path = synonym_dictionary
+	url = git@github.com:egorkaru/synonym_dictionary.git

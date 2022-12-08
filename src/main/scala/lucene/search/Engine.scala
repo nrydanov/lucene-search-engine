@@ -6,8 +6,6 @@ import util.JsonDocument
 
 import org.apache.lucene.analysis.ru.RussianAnalyzer
 import org.apache.lucene.document.Document
-import org.apache.lucene.index.Term
-import org.apache.lucene.search.TermQuery
 import org.apache.lucene.store.MMapDirectory
 
 import java.io.File
@@ -21,11 +19,8 @@ class Engine(path: Path) {
 
   private val index: InMemoryIndex = new InMemoryIndex(directory, analyzer)
 
-  def searchOneTerm(term: Term, top: Int): Array[Document] = {
-
-    val documents = index.searchIndex(new TermQuery(term), top)
-
-    documents
+  def searchQuery(field: String, queryString: String, top: Int): Array[Document] = {
+    index.searchIndex(field, queryString, top)
   }
 
   def addJsonDocuments(path: String): Unit = {
@@ -39,8 +34,6 @@ class Engine(path: Path) {
     for (file <- files) {
       val doc = new JsonDocument(file.getAbsolutePath)
       index.indexDocument(doc.getTitle, doc.getBody, doc.getCategories)
-
-
     }
   }
 
