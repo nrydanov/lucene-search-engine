@@ -1,9 +1,12 @@
 package com.htl.searchengine
 package lucene.search
 
+import Application.system.dispatcher
+import actors.BatchProcessingActor
+import dto.{JsonDocument, SearchResult}
 import lucene.index.InMemoryIndex
-import util.{JsonDocument, SearchResult}
 
+import akka.actor.{ActorSystem, Props}
 import org.apache.lucene.analysis.ru.RussianAnalyzer
 import org.apache.lucene.document.Document
 import org.apache.lucene.queryparser.classic.QueryParser
@@ -11,8 +14,9 @@ import org.apache.lucene.search.highlight.{Highlighter, QueryScorer, SimpleHTMLF
 import org.apache.lucene.store.MMapDirectory
 
 import java.nio.file.Path
+import scala.concurrent.duration.DurationInt
 
-class Engine(path: Path) {
+class Engine(path: Path, actorSystem: ActorSystem) {
 
   private final val MAX_FRAGMENT_SIZE = 100
 
@@ -22,7 +26,10 @@ class Engine(path: Path) {
 
   private val index: InMemoryIndex = new InMemoryIndex(directory, analyzer)
 
-  private def convertToResult(documents: Array[Document], queryScorer: QueryScorer): Array[SearchResult] = {
+  private val batchProcessor = actorSystem.actorOf(Props(classOf[BatchProcessingActor], index), "batch-processor-actor")
+
+  actorSystem.scheduler.scheduleAtFixedRate(0.seconds, 5.seconds, batchProcessor, "process")
+  private def convertToResult(documents: IndexedSeq[Document], queryScorer: QueryScorer): Array[SearchResult] = {
 
     val highlighter = new Highlighter(new SimpleHTMLFormatter(), queryScorer)
 
@@ -48,7 +55,7 @@ class Engine(path: Path) {
   }
 
   def addJsonDocument(json: JsonDocument): Unit = {
-    index.indexDocument(json.getTitle, json.getBody, json.getCategories)
+    batchProcessor ! json
   }
 
   def clearIndex(): Unit = {
