@@ -18,8 +18,6 @@ import scala.concurrent.duration.DurationInt
 
 class Engine(path: Path, actorSystem: ActorSystem) {
 
-  private final val MAX_FRAGMENT_SIZE = 100
-
   private val directory = new MMapDirectory(path)
 
   private val analyzer = new RussianAnalyzer()
@@ -29,11 +27,13 @@ class Engine(path: Path, actorSystem: ActorSystem) {
   private val batchProcessor = actorSystem.actorOf(Props(classOf[BatchProcessingActor], index), "batch-processor-actor")
 
   actorSystem.scheduler.scheduleAtFixedRate(0.seconds, 5.seconds, batchProcessor, "process")
-  private def convertToResult(documents: IndexedSeq[Document], queryScorer: QueryScorer): Array[SearchResult] = {
+
+  private def convertToResult(documents: IndexedSeq[Document], queryScorer: QueryScorer,
+                              maxFragmentSize: Int): Array[SearchResult] = {
 
     val highlighter = new Highlighter(new SimpleHTMLFormatter(), queryScorer)
 
-    highlighter.setTextFragmenter(new SimpleSpanFragmenter(queryScorer, this.MAX_FRAGMENT_SIZE))
+    highlighter.setTextFragmenter(new SimpleSpanFragmenter(queryScorer, maxFragmentSize))
     highlighter.setMaxDocCharsToAnalyze(Int.MaxValue)
 
     val results = new Array[SearchResult](documents.length)
@@ -47,9 +47,9 @@ class Engine(path: Path, actorSystem: ActorSystem) {
     results
   }
 
-  def searchQuery(field: String, queryString: String, top: Int): Array[SearchResult] = {
+  def searchQuery(field: String, queryString: String, top: Int, maxFragmentSize: Int): Array[SearchResult] = {
     val query = new QueryParser(field, analyzer).parse(queryString)
-    val results = convertToResult(index.searchIndex(query, top), new QueryScorer(query))
+    val results = convertToResult(index.searchIndex(query, top), new QueryScorer(query), maxFragmentSize)
 
     results
   }
