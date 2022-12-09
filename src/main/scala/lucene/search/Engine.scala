@@ -44,7 +44,6 @@ class Engine(path: Path) {
     val query = new QueryParser(field, analyzer).parse(queryString)
     val results = convertToResult(index.searchIndex(query, top), new QueryScorer(query))
 
-
     results
   }
 

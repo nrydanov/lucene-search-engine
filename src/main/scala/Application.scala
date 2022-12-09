@@ -17,7 +17,18 @@ object Application extends Logging with JsonSupport {
 
   private def clearIndex(): Unit = {
     engine.clearIndex()
-    logger.info("Index is cleared successfully")
+    logger.info(s"Index was cleared successfully")
+  }
+
+  private def processBatch(batch: Batch): Unit = {
+    batch.documents.foreach(doc => {
+      engine.addJsonDocument(doc)
+      logger.info(s"Document ${doc.getTitle} was added")
+    })
+  }
+
+  private def processQuery(field: String, query: String, top: String): Array[SearchResult] = {
+    engine.searchQuery(field, query, top.toInt)
   }
 
   private def resultsToString(results: Array[SearchResult]): String = {
@@ -32,25 +43,19 @@ object Application extends Logging with JsonSupport {
           concat(
               path("clear") {
                 get {
-                  engine.clearIndex()
-                  logger.info(s"Index was cleared successfully")
+                  clearIndex()
                   complete(StatusCodes.OK)
                 }
             },
             get {
               parameters(Symbol("field"), Symbol("query"), Symbol("top")) { (field: String, query: String, top: String) =>
-                val results = engine.searchQuery(field, query, top.toInt)
+                val results = processQuery(field, query, top)
                 complete(HttpEntity(ContentTypes.`text/html(UTF-8)`, resultsToString(results)))
-
               }
             },
             post {
               entity(as[Batch]) { batch =>
-                batch.documents.foreach(doc => {
-                  engine.addJsonDocument(doc)
-                  logger.info(s"Document ${doc.getTitle} was added")
-                })
-
+                processBatch(batch)
                 complete(StatusCodes.OK)
               }
             })
