@@ -28,17 +28,29 @@ object Application extends Logging with JsonSupport {
     implicit val system: ActorSystem = ActorSystem("system")
 
     val route = {
-        path("engine") {
+        pathPrefix("engine") {
           concat(
+              path("clear") {
+                get {
+                  engine.clearIndex()
+                  logger.info(s"Index was cleared successfully")
+                  complete(StatusCodes.OK)
+                }
+            },
             get {
               parameters(Symbol("field"), Symbol("query"), Symbol("top")) { (field: String, query: String, top: String) =>
                 val results = engine.searchQuery(field, query, top.toInt)
                 complete(HttpEntity(ContentTypes.`text/html(UTF-8)`, resultsToString(results)))
+
               }
             },
             post {
               entity(as[Batch]) { batch =>
-                batch.documents.foreach(engine.addJsonDocument)
+                batch.documents.foreach(doc => {
+                  engine.addJsonDocument(doc)
+                  logger.info(s"Document ${doc.getTitle} was added")
+                })
+
                 complete(StatusCodes.OK)
               }
             })
@@ -48,7 +60,9 @@ object Application extends Logging with JsonSupport {
     val interface = "localhost"
     val port = 8081
 
-    val _ = Http().newServerAt(interface, port).bind(route)
+    val _ = Http()
+      .newServerAt(interface, port)
+      .bind(route)
 
     logger.info(s"Server now online")
 
