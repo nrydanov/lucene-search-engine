@@ -1,24 +1,10 @@
 package com.htl.searchengine
 package util
 
-import play.api.libs.json._
-
-import scala.io.Source
-
-class JsonDocument(filePath: String) {
-
-  private val source = Source.fromFile(filePath)
-  private val text = source.getLines.mkString
-  source.close()
-
-  private val json = Json.parse(text)
-
-  private val title = (json \ "title").get.as[String]
-  private val body = (json \ "body").get.as[String]
-  private val categories = (json \ "categories").get.as[Array[String]]
+final case class JsonDocument(title: String, body: String, categories: Array[String]) extends Serializable {
 
   def getTitle: String = {
-     title
+    title
   }
 
   def getBody: String = {
