@@ -1,22 +1,17 @@
 package com.htl.searchengine
 
 import lucene.search.Engine
-import util.{JsonDocument, SearchResult}
+import util.{Batch, JsonSupport, SearchResult}
 
 import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.server.Directives._
 import org.apache.logging.log4j.scala.Logging
-import play.api.libs.json.Format.GenericFormat
-import play.api.libs.json.{Json, Reads}
 
 import java.nio.file.Paths
-import java.util.concurrent.ConcurrentLinkedQueue
 
-object Application extends Logging {
-
-  final case class Documents(messages: List[String])
+object Application extends Logging with JsonSupport {
 
   private val engine = new Engine(Paths.get(getClass.getResource("/directory").getPath))
 
@@ -32,8 +27,6 @@ object Application extends Logging {
   def main(args: Array[String]): Unit = {
     implicit val system: ActorSystem = ActorSystem("system")
 
-    val batch = new ConcurrentLinkedQueue[String]
-
     val route = {
         path("engine") {
           concat(
@@ -44,19 +37,9 @@ object Application extends Logging {
               }
             },
             post {
-              entity(as[String]) { jsonString =>
-                implicit val reader: Reads[JsonDocument] = Json.reads[JsonDocument]
-
-                try {
-                  engine.addJsonDocument(reader.reads(Json.toJson(jsonString)).get)
-                  logger.info(s"Document was indexed")
-                  complete(StatusCodes.OK)
-                }
-                catch {
-                  case e: Throwable =>
-                    logger.error(e.getMessage)
-                    complete(StatusCodes.BadRequest)
-                }
+              entity(as[Batch]) { batch =>
+                batch.documents.foreach(engine.addJsonDocument)
+                complete(StatusCodes.OK)
               }
             })
         }
