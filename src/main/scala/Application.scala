@@ -1,7 +1,7 @@
 package com.htl.searchengine
 
 import lucene.search.Engine
-import util.{Batch, JsonSupport, SearchResult}
+import dto.{Batch, JsonSupport, SearchResult}
 
 import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
@@ -13,7 +13,9 @@ import java.nio.file.Paths
 
 object Application extends Logging with JsonSupport {
 
-  private val engine = new Engine(Paths.get(getClass.getResource("/directory").getPath))
+  implicit final val system: ActorSystem = ActorSystem("system")
+
+  private val engine = new Engine(Paths.get(getClass.getResource("/directory").getPath), system)
 
   private def clearIndex(): Unit = {
     engine.clearIndex()
@@ -23,7 +25,6 @@ object Application extends Logging with JsonSupport {
   private def processBatch(batch: Batch): Unit = {
     batch.documents.foreach(doc => {
       engine.addJsonDocument(doc)
-      logger.info(s"Document ${doc.getTitle} was added")
     })
   }
 
@@ -36,7 +37,6 @@ object Application extends Logging with JsonSupport {
   }
 
   def main(args: Array[String]): Unit = {
-    implicit val system: ActorSystem = ActorSystem("system")
 
     val route = {
         pathPrefix("engine") {
@@ -50,7 +50,7 @@ object Application extends Logging with JsonSupport {
             get {
               parameters(Symbol("field"), Symbol("query"), Symbol("top")) { (field: String, query: String, top: String) =>
                 val results = processQuery(field, query, top)
-                complete(HttpEntity(ContentTypes.`text/html(UTF-8)`, resultsToString(results)))
+                complete(HttpEntity(ContentTypes.`application/json`, resultsToString(results)))
               }
             },
             post {
@@ -68,6 +68,7 @@ object Application extends Logging with JsonSupport {
     val _ = Http()
       .newServerAt(interface, port)
       .bind(route)
+
 
     logger.info(s"Server now online")
 

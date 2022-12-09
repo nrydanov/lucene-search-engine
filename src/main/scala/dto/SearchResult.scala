@@ -1,5 +1,5 @@
 package com.htl.searchengine
-package util
+package dto
 
 final case class SearchResult(title: String, fragment: String) extends Serializable {
   override def toString: String = {
