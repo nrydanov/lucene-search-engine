@@ -1,26 +1,23 @@
 package com.htl.searchengine
 package actors
 
-import dto.{Batch, JsonDocument}
+import dto.JsonDocument
 import lucene.index.InMemoryIndex
 
-import akka.actor.{Actor, ActorRef, Props, Stash}
+import akka.actor.{Actor, Stash}
 import org.apache.logging.log4j.scala.Logging
-
-import java.util
-import scala.collection.convert.ImplicitConversions.`iterable AsScalaIterable`
 
 class BatchProcessingActor(index: InMemoryIndex) extends Actor with Logging with Stash {
 
-  val batch = new util.LinkedList[JsonDocument]
+  var batch = List.empty[JsonDocument]
   override def receive: Receive = {
     case "process" =>
-      for (json <- batch) {
+      batch.foreach(json => {
         index.indexDocument(json.title, json.body, json.categories)
-        logger.info(s"${batch.size} were added since last job executed")
-        batch.clear()
-      }
+      })
+      logger.info(s"${batch.length} were added since last job executed")
+      batch = List.empty[JsonDocument]
     case json: JsonDocument =>
-      batch.add(json)
+      batch = json :: batch
   }
 }
