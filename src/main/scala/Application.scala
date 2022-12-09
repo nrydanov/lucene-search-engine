@@ -1,66 +1,70 @@
 package com.htl.searchengine
 
 import lucene.search.Engine
+import util.{Batch, JsonSupport, SearchResult}
 
+import akka.actor.ActorSystem
+import akka.http.scaladsl.Http
+import akka.http.scaladsl.model._
+import akka.http.scaladsl.server.Directives._
 import org.apache.logging.log4j.scala.Logging
 
 import java.nio.file.Paths
-import scala.io.StdIn.readLine
 
-object Application extends Logging {
+object Application extends Logging with JsonSupport {
 
-  private val e = new Engine(Paths.get(getClass.getResource("/directory").getPath))
-
-  private def addDocuments(): Unit = {
-    print("Enter folder name (from resources folder): ")
-
-    val path = readLine()
-
-    try {
-      e.addJsonDocuments(getClass.getResource(path).getPath)
-      logger.info("Documents was added successfully")
-    }
-    catch {
-      case _: Exception => logger.error("Couldn't open folder")
-    }
-  }
-
-  private def makeOneTermSearch(): Unit = {
-    print("Enter field name: ")
-    val field = readLine()
-
-    print("Enter query: ")
-    val queryString = readLine()
-
-    print("Enter number of documents: ")
-    val number = readLine().toInt
-
-    e.searchQuery(field, queryString, number)
-  }
+  private val engine = new Engine(Paths.get(getClass.getResource("/directory").getPath))
 
   private def clearIndex(): Unit = {
-    e.clearIndex()
+    engine.clearIndex()
     logger.info("Index is cleared successfully")
   }
+
+  private def resultsToString(results: Array[SearchResult]): String = {
+    results.map(x => x.toString).mkString(",")
+  }
+
   def main(args: Array[String]): Unit = {
+    implicit val system: ActorSystem = ActorSystem("system")
 
-    var active = true
+    val route = {
+        pathPrefix("engine") {
+          concat(
+              path("clear") {
+                get {
+                  engine.clearIndex()
+                  logger.info(s"Index was cleared successfully")
+                  complete(StatusCodes.OK)
+                }
+            },
+            get {
+              parameters(Symbol("field"), Symbol("query"), Symbol("top")) { (field: String, query: String, top: String) =>
+                val results = engine.searchQuery(field, query, top.toInt)
+                complete(HttpEntity(ContentTypes.`text/html(UTF-8)`, resultsToString(results)))
 
-    while (active) {
-      println("Choose option:")
-      println("1. Add documents from directory")
-      println("2. Make query search")
-      println("3. Clear index")
+              }
+            },
+            post {
+              entity(as[Batch]) { batch =>
+                batch.documents.foreach(doc => {
+                  engine.addJsonDocument(doc)
+                  logger.info(s"Document ${doc.getTitle} was added")
+                })
 
-      print("Option: ")
-      val query = readLine().toInt
-
-      query match {
-        case 1 => addDocuments()
-        case 2 => makeOneTermSearch()
-        case 3 => clearIndex()
-        case _ => active = false
-      }
+                complete(StatusCodes.OK)
+              }
+            })
+        }
     }
+
+    val interface = "localhost"
+    val port = 8081
+
+    val _ = Http()
+      .newServerAt(interface, port)
+      .bind(route)
+
+    logger.info(s"Server now online")
+
   }
 }
