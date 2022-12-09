@@ -15,7 +15,9 @@ object Application extends Logging with JsonSupport {
 
   implicit final val system: ActorSystem = ActorSystem("system")
 
-  private val engine = new Engine(Paths.get(getClass.getResource("/directory").getPath), system)
+  private val directoryPath = Paths.get(getClass.getResource("/directory").getPath)
+
+  private val engine = new Engine(directoryPath, system)
 
   private def clearIndex(): Unit = {
     engine.clearIndex()
