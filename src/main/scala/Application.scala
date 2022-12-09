@@ -28,8 +28,8 @@ object Application extends Logging with JsonSupport {
     })
   }
 
-  private def processQuery(field: String, query: String, top: String): Array[SearchResult] = {
-    engine.searchQuery(field, query, top.toInt)
+  private def processQuery(field: String, query: String, top: String, maxFragmentSize: String): Array[SearchResult] = {
+    engine.searchQuery(field, query, top.toInt, maxFragmentSize.toInt)
   }
 
   private def resultsToString(results: Array[SearchResult]): String = {
@@ -48,8 +48,9 @@ object Application extends Logging with JsonSupport {
                 }
             },
             get {
-              parameters(Symbol("field"), Symbol("query"), Symbol("top")) { (field: String, query: String, top: String) =>
-                val results = processQuery(field, query, top)
+              parameters(Symbol("field"), Symbol("query"), Symbol("top"), Symbol("fragment")) {
+                  (field: String, query: String, top: String, maxFragmentSize: String) =>
+                val results = processQuery(field, query, top, maxFragmentSize)
                 complete(HttpEntity(ContentTypes.`application/json`, resultsToString(results)))
               }
             },
