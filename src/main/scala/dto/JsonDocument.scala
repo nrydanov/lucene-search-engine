@@ -6,11 +6,11 @@ import spray.json.{DefaultJsonProtocol, RootJsonFormat}
 
 import java.util
 
-final case class JsonDocument(title: String, body: String, categories: Array[String]) extends Serializable
+final case class JsonDocument(title: String, body: String, categories: Array[String], url:String) extends Serializable
 
 case class Batch(documents: List[JsonDocument])
 
 trait JsonSupport extends SprayJsonSupport with DefaultJsonProtocol {
-  implicit val jsonDocumentFormat: RootJsonFormat[JsonDocument] = jsonFormat3(JsonDocument)
+  implicit val jsonDocumentFormat: RootJsonFormat[JsonDocument] = jsonFormat4(JsonDocument)
   implicit val batchFormat: RootJsonFormat[Batch] = jsonFormat1(Batch)
 }

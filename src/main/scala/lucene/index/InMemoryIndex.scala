@@ -8,16 +8,19 @@ import org.apache.lucene.index.{DirectoryReader, IndexWriter, IndexWriterConfig}
 import org.apache.lucene.search.{IndexSearcher, Query}
 import org.apache.lucene.store.Directory
 
-class InMemoryIndex(var directory: Directory, var analyzer: Analyzer) {
+class InMemoryIndex(val directory: Directory, val analyzer: Analyzer) {
 
-  def indexDocument(title: String, body:String, categories: Array[String]): Unit = {
+  def indexDocument(title: String, body:String, categories: Array[String], url: String): Unit = {
     val config = new IndexWriterConfig(analyzer)
+
     val writer = new IndexWriter(directory, config)
+
     val document = new Document()
 
     document.add(new TextField("title", title, Field.Store.YES))
     document.add(new TextField("body", body, Field.Store.YES))
     categories.foreach(cat => document.add(new TextField("categories", cat, Field.Store.YES)))
+    document.add(new TextField("url", url, Field.Store.YES))
 
     writer.addDocument(document)
     writer.close()
@@ -31,12 +34,12 @@ class InMemoryIndex(var directory: Directory, var analyzer: Analyzer) {
     writer.close()
   }
 
-  def searchIndex(query: Query, top: Int): Array[Document] = {
+  def searchIndex(query: Query, top: Int): Array[(Float, Document)] = {
     val reader = DirectoryReader.open(directory)
     val searcher = new IndexSearcher(reader)
     val docs = searcher.search(query, top)
 
-    val result = docs.scoreDocs.map(scoreDoc => searcher.doc(scoreDoc.doc))
+    val result = docs.scoreDocs.map(scoreDoc => (scoreDoc.score, searcher.doc(scoreDoc.doc)))
 
     result
   }
