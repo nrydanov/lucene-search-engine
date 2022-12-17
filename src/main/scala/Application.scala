@@ -7,17 +7,25 @@ import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.server.Directives._
+
 import org.apache.logging.log4j.scala.Logging
+import org.json4s._
+import org.json4s.native.Serialization
+
 
 import java.nio.file.Paths
+
 
 object Application extends Logging with JsonSupport {
 
   implicit final val system: ActorSystem = ActorSystem("system")
 
-  private val directoryPath = Paths.get(getClass.getResource("/directory").getPath)
+  private implicit val formats = Serialization.formats(NoTypeHints)
 
-  private val engine = new Engine(directoryPath, system)
+  private val directoryPath = Paths.get(getClass.getResource("/d1").getPath)
+  private val nGramPath = Paths.get(getClass.getResource("/d2").getPath)
+
+  private val engine = new Engine(directoryPath, nGramPath, system)
 
   private def clearIndex(): Unit = {
     engine.clearIndex()
@@ -32,10 +40,6 @@ object Application extends Logging with JsonSupport {
 
   private def processQuery(field: String, query: String, top: String, maxFragmentSize: String): Array[SearchResult] = {
     engine.searchQuery(field, query, top.toInt, maxFragmentSize.toInt)
-  }
-
-  private def resultsToString(results: Array[SearchResult]): String = {
-    results.map(x => x.toString).mkString(",")
   }
 
   def main(args: Array[String]): Unit = {
@@ -53,7 +57,7 @@ object Application extends Logging with JsonSupport {
               parameters(Symbol("field"), Symbol("query"), Symbol("top"), Symbol("fragment")) {
                   (field: String, query: String, top: String, maxFragmentSize: String) =>
                 val results = processQuery(field, query, top, maxFragmentSize)
-                complete(HttpEntity(ContentTypes.`application/json`, resultsToString(results)))
+                complete(HttpEntity(ContentTypes.`application/json`, Serialization.write(results)))
               }
             },
             post {

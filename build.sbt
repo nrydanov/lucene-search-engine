@@ -21,12 +21,6 @@ lazy val root = (project in file("."))
 libraryDependencies += "com.typesafe.play" %% "play-json" % PlayVersion
 
 libraryDependencies ++= Seq(
-  "io.circe" %% "circe-core" % CirceVersion,
-  "io.circe" %% "circe-parser" % CirceVersion,
-  "io.circe" %% "circe-generic" % CirceVersion
-)
-
-libraryDependencies ++= Seq(
   "org.apache.lucene" % "lucene-core" % LuceneVersion,
   "org.apache.lucene" % "lucene-queryparser" % LuceneVersion,
   "org.apache.lucene" % "lucene-highlighter" % LuceneVersion,
@@ -46,3 +40,5 @@ libraryDependencies ++= Seq(
 )
 
 libraryDependencies += "org.slf4j" % "slf4j-api" % Sl4jVersion
+libraryDependencies += "org.json4s" %% "json4s-native" % "4.1.0-M2"
+
